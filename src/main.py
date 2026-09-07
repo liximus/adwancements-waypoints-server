@@ -45,6 +45,8 @@ def get_wp_data(payload: Union[WaypointRequestPayload, WaypointModel]) -> dict:
 # Базовый health check
 # -------------------------------------------------------------
 @app.get("/")
+@app.get("/api")
+@app.get("/api/")
 def health_check():
     return {
         "status": "ok",

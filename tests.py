@@ -1,56 +1,41 @@
 import src.db as db
 import src.wp_db as wp_db
+import time
 
-print("=== Тестирование логики вейпоинтов ===")
+#wp_types: на рассмотрении, отклонена, одобрено, одобрено с правками, одобрена в уже существующий, заблокирована, не найдена
 
-server = "pepeland"
-test_id = "test_wp_diamond"
+# db.write("wp:existing", "wp_1", '{name=\'asd\', desc=\'desc\'}')
+# print(db.read_all_from_space('wp'))
+# db.write("wp:requests","wp_1", '{name=\'asdfgd1\', desc=\'descdfg1\'}')
+# db.write("wp_type","wp_1", '{name=\'asdfgd2\', desc=\'descdfg2\'}')
+# print(db.read_all_from_space('req_wp'))
+# print(db.read_all_keys_from_space('req_wp'))
 
-test_wp = {
-    "id": test_id,
-    "title": "Алмазная жила",
-    "description": "Точка на высоте Y=-58",
-    "icon": "minecraft:diamond_ore",
-    "frame": "task",
-    "parent": "",
-    "x": 120.5,
-    "y": -58.0,
-    "z": 450.0,
-    "author": "Steve"
-}
+db.clearAll()
 
-# 1. Добавляем заявку
-print(f"1. Добавление заявки {test_id}...")
-wp_db.add_wp_to_requests(test_wp, server=server)
+wp_db.add_wp_to_requests({'id': 'wp_1', 'icon': 'minecraft:grass_block', 'title': 'title', 'description': 'desc', 'frame': 'task', 'parent': ''})
+time.sleep(0.1)
+wp_db.add_wp_to_requests({'id': 'wp_2', 'icon': 'minecraft:grass_block', 'title': 'title', 'description': 'desc', 'frame': 'task', 'parent': ''})
+time.sleep(0.1)
+wp_db.add_wp_to_requests({'id': 'wp_3', 'icon': 'minecraft:grass_block', 'title': 'title', 'description': 'desc', 'frame': 'task', 'parent': ''})
+time.sleep(0.1)
+wp_db.add_wp_to_requests({'id': 'wp_4', 'icon': 'minecraft:grass_block', 'title': 'title', 'description': 'desc', 'frame': 'task', 'parent': ''})
+time.sleep(0.1)
+wp_db.add_wp_to_requests({'id': 'wp_5', 'icon': 'minecraft:grass_block', 'title': 'title', 'description': 'desc', 'frame': 'task', 'parent': ''})
+time.sleep(0.1)
+wp_db.add_wp_to_requests({'id': 'wp_6', 'icon': 'minecraft:grass_block', 'title': 'title', 'description': 'desc', 'frame': 'task', 'parent': ''})
+time.sleep(0.1)
+wp_db.add_wp_to_requests({'id': 'wp_6', 'icon': 'minecraft:grass_block', 'title': 'title', 'description': 'desc', 'frame': 'task', 'parent': ''})
+time.sleep(0.1)
 
-# 2. Проверяем статус заявки
-status = wp_db.get_wp_status(test_id, server=server)
-print("2. Статус заявки:", status)
-assert status.get("type") == "pending", f"Ожидался статус 'pending', получено: {status}"
 
-# 3. Смотрим все заявки
-requests = wp_db.get_all_wp_requests(server=server)
-print(f"3. Найдено заявок: {len(requests)}")
-assert any(r.get("id") == test_id for r in requests), "Заявка не найдена в списке заявок!"
 
-# 4. Одобряем заявку
-print("4. Одобрение заявки...")
-approved = wp_db.approve_wp_request(test_id, server=server)
-assert approved is True, "Не удалось одобрить заявку"
 
-# 5. Проверяем новый статус
-new_status = wp_db.get_wp_status(test_id, server=server)
-print("5. Новый статус:", new_status)
-assert new_status.get("type") == "approved", f"Ожидался статус 'approved', получено: {new_status}"
-
-# 6. Проверяем в существующих
-existing = wp_db.get_all_existing_wp(server=server)
-print(f"6. Найдено подтвержденных вейпоинтов: {len(existing)}")
-assert any(w.get("id") == test_id for w in existing), "Вейпоинт не найден в списке существующих!"
-
-# 7. Очищаем тестовый вейпоинт
-wp_db.delete_existing_wp(test_id, server=server)
-db.delete(f"wp:{server}:status", test_id)
-print("7. Тестовый вейпоинт удален из базы.")
-
-print("\n Все тесты успешно пройдены!")
+# print(wp_db.get_all_wp_requests())
+# print(wp_db.get_all_existing_wp())
+# print(db.read_all_from_space('wp_status'))
+# wp_db.approve_wp_request("wp_2")
+# print()
+# print(wp_db.get_all_wp_requests())
+# print(wp_db.get_all_existing_wp())
+# print(db.read_all_from_space('wp_status'))

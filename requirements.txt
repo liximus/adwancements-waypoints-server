@@ -3,3 +3,4 @@ upstash-redis
 fastapi
 pydantic
 uvicorn
+PyJWT

@@ -5,8 +5,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-redis_url = os.environ.get("UPSTASH_REDIS_REST_URL", "")
-redis_token = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
+redis_url = os.environ.get(
+    "UPSTASH_REDIS_REST_URL",
+    "https://brave-mastiff-216319.upstash.io"
+)
+redis_token = os.environ.get(
+    "UPSTASH_REDIS_REST_TOKEN",
+    "gQAAAAAAA0z_AAIgcDFlN2UxZmJmNGE1YjM0MmEzOTg0YjJjMGQ3ZTU0YzJkNQ"
+)
 
 from upstash_redis import Redis
 

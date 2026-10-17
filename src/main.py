@@ -141,6 +141,10 @@ def verify_moderator(
 
 
 @app.get("/")
+@app.get("/api")
+@app.get("/api/")
+@app.get("/api/index")
+@app.get("/api/index.py")
 def health_check():
     return {
         "status": "ok",

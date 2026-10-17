@@ -16,6 +16,11 @@ redis_token = os.environ.get(
     "gQAAAAAAA0z_AAIgcDFlN2UxZmJmNGE1YjM0MmEzOTg0YjJjMGQ3ZTU0YzJkNQ"
 )
 
+# Если в переменных Vercel осталась старая удаленная база rare-doe-144994
+if "rare-doe" in redis_url:
+    redis_url = "https://brave-mastiff-216319.upstash.io"
+    redis_token = "gQAAAAAAA0z_AAIgcDFlN2UxZmJmNGE1YjM0MmEzOTg0YjJjMGQ3ZTU0YzJkNQ"
+
 
 def _execute(command: List[Any]) -> Any:
     headers = {

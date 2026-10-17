@@ -1,5 +1,7 @@
 import json
 import os
+import urllib.request
+import urllib.error
 from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
 
@@ -8,20 +10,35 @@ load_dotenv()
 redis_url = os.environ.get(
     "UPSTASH_REDIS_REST_URL",
     "https://brave-mastiff-216319.upstash.io"
-)
+).rstrip("/")
+
 redis_token = os.environ.get(
     "UPSTASH_REDIS_REST_TOKEN",
     "gQAAAAAAA0z_AAIgcDFlN2UxZmJmNGE1YjM0MmEzOTg0YjJjMGQ3ZTU0YzJkNQ"
 )
 
-from upstash_redis import Redis
 
-redis = Redis(url=redis_url, token=redis_token)
+def _execute(command: List[Any]) -> Any:
+    req = urllib.request.Request(
+        redis_url,
+        headers={
+            "Authorization": f"Bearer {redis_token}",
+            "Content-Type": "application/json"
+        },
+        data=json.dumps(command).encode("utf-8")
+    )
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        if "error" in data:
+            raise RuntimeError(f"Upstash error: {data['error']}")
+        return data.get("result")
 
 
 def read(space: str, key: str) -> dict:
-    raw = redis.hget(space, key)
+    raw = _execute(["HGET", space, key])
     if raw:
+        if isinstance(raw, dict):
+            return raw
         return json.loads(raw)
     return {}
 
@@ -31,10 +48,10 @@ def read_batch(space: str, keys: List[str]) -> Dict[str, dict]:
         return {}
     results = {}
     try:
-        raw_values = redis.hmget(space, *keys)
+        raw_values = _execute(["HMGET", space, *keys])
         for k, v in zip(keys, raw_values):
             if v:
-                results[k] = json.loads(v)
+                results[k] = json.loads(v) if isinstance(v, str) else v
             else:
                 results[k] = {}
     except Exception:
@@ -44,49 +61,52 @@ def read_batch(space: str, keys: List[str]) -> Dict[str, dict]:
 
 
 def read_all_from_space(space: str) -> List[dict]:
-    raw = redis.hgetall(space)
-    if raw:
+    raw_vals = _execute(["HVALS", space])
+    if raw_vals:
         arr = []
-        for _, j in raw.items():
-            if isinstance(j, str):
-                arr.append(json.loads(j))
-            elif isinstance(j, dict):
-                arr.append(j)
+        for v in raw_vals:
+            if isinstance(v, str):
+                try:
+                    arr.append(json.loads(v))
+                except Exception:
+                    pass
+            elif isinstance(v, dict):
+                arr.append(v)
         return arr
     return []
 
 
 def read_all_keys_from_space(space: str) -> List[str]:
-    raw = redis.hgetall(space)
-    if raw:
-        return list(raw.keys())
+    raw_keys = _execute(["HKEYS", space])
+    if raw_keys:
+        return [str(k) for k in raw_keys]
     return []
 
 
 def write(space: str, key: str, payload: dict) -> bool:
     dump = json.dumps(payload, ensure_ascii=False)
-    redis.hset(space, key, dump)
+    _execute(["HSET", space, key, dump])
     return True
 
 
 def delete(space: str, key: str):
-    redis.hdel(space, key)
+    _execute(["HDEL", space, key])
 
 
 def set_add(key: str, member: str):
-    redis.sadd(key, member)
+    _execute(["SADD", key, member])
 
 
 def set_remove(key: str, member: str):
-    redis.srem(key, member)
+    _execute(["SREM", key, member])
 
 
 def set_members(key: str) -> List[str]:
-    raw = redis.smembers(key)
+    raw = _execute(["SMEMBERS", key])
     if not raw:
         return []
     return [str(m) for m in raw]
 
 
 def clearAll():
-    redis.flushdb()
+    _execute(["FLUSHDB"])

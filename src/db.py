@@ -1,9 +1,8 @@
 import json
 import os
-import urllib.request
-import urllib.error
 from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
+import requests
 
 load_dotenv()
 
@@ -19,19 +18,23 @@ redis_token = os.environ.get(
 
 
 def _execute(command: List[Any]) -> Any:
-    req = urllib.request.Request(
+    headers = {
+        "Authorization": f"Bearer {redis_token}",
+        "User-Agent": "PepelandWaypoints/2.0",
+        "Connection": "close"
+    }
+    resp = requests.post(
         redis_url,
-        headers={
-            "Authorization": f"Bearer {redis_token}",
-            "Content-Type": "application/json"
-        },
-        data=json.dumps(command).encode("utf-8")
+        json=command,
+        headers=headers,
+        timeout=10
     )
-    with urllib.request.urlopen(req, timeout=10) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
-        if "error" in data:
-            raise RuntimeError(f"Upstash error: {data['error']}")
-        return data.get("result")
+    if resp.status_code != 200:
+        raise RuntimeError(f"Upstash HTTP {resp.status_code}: {resp.text}")
+    data = resp.json()
+    if "error" in data:
+        raise RuntimeError(f"Upstash error: {data['error']}")
+    return data.get("result")
 
 
 def read(space: str, key: str) -> dict:
